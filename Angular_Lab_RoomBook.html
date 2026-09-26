@@ -331,6 +331,10 @@ this.rooms().push(newRoom);                             // ❌ тот же ма�
 <p>При выполнении <code>computed</code>, <code>effect</code> или шаблона Angular выставляет «текущего потребителя». Каждый вызов <code>sig()</code> регистрирует сигнал как зависимость этого потребителя. При <code>set</code> сигнал помечает зависимых потребителей «грязными» (push), а пересчёт происходит лениво, когда значение снова нужно (pull). Шаблон компонента — тоже потребитель. Поэтому zoneless-Angular знает, какие компоненты перерисовать, и не проверяет остальные. Та же идея, что у <code>reactive</code>/<code>effect</code> во Vue и в Proxy-сторе JS-лабы, только без Proxy: зависимость регистрирует явный вызов функции.</p>
 </div></details>
 
+<div class="next-box"><span class="tag">ПЕРЕД РАЗДЕЛАМИ <a href="#sec-4">4</a>–<a href="#sec-5">5</a></span><ul>
+<li>📖 <a href="https://angular.dev/guide/di" target="_blank">Dependency Injection</a> — 20 минут. <a href="https://angular.dev/ecosystem/rxjs-interop" target="_blank">RxJS interop</a> — 10 минут.</li>
+</ul></div>
+
 <h2 id="sec-4"><label class="done-label" title="Отметить раздел пройденным"><input type="checkbox" class="done" data-key="sec-4"></label>4. Dependency Injection под капотом <a class="anchor" href="#sec-4">#</a></h2>
 
 <p>DI — ответ на вопрос «откуда компонент берёт сервис». Компонент не создаёт зависимости (<code>new RoomsApi()</code>), а просит их у <b>инжектора</b>. Инжекторы образуют дерево:</p>
@@ -338,14 +342,14 @@ this.rooms().push(newRoom);                             // ❌ тот же ма�
  └─ инжекторы lazy-маршрутов       ← providers: [] в конфигурации маршрута
      └─ ElementInjector AppShell    ← providers: [] в @Component
          └─ ElementInjector BookingPage
-             └─ ElementInjector BookingForm  ← inject(X): ищет вверх до первого провайдера X</code></pre>
+             └─ ElementInjector TimeSelect   ← inject(X): ищет вверх до первого провайдера X</code></pre>
 <p><code>inject(X)</code> идёт от текущего компонента вверх по дереву и берёт экземпляр у первого инжектора, где X предоставлен. Не нашёл — ошибка <code>NullInjectorError</code>.</p>
 <table>
 <tr><th>Где объявлен провайдер</th><th>Сколько экземпляров</th><th>Когда в RoomBook</th></tr>
 <tr><td><code>@Injectable({ providedIn: 'root' })</code></td><td>один на приложение, создаётся при первом <code>inject</code>; tree-shakable</td><td><code>RoomsApi</code>, <code>AuthStore</code>, <code>BookingsStore</code></td></tr>
 <tr><td><code>providers</code> в <code>app.config.ts</code></td><td>один на приложение</td><td><code>provideRouter</code>, <code>provideHttpClient</code>, токены конфигурации</td></tr>
 <tr><td><code>providers</code> маршрута</td><td>один на этот раздел, пока он загружен</td><td>сервисы админки</td></tr>
-<tr><td><code>providers</code> компонента</td><td>свой у каждого экземпляра компонента и его детей</td><td>состояние одной формы брони (шаг 2.1)</td></tr>
+<tr><td><code>providers</code> компонента</td><td>свой у каждого экземпляра компонента и его детей</td><td>состояние одной формы брони; сам механизм — на счётчике в шаге 2.1</td></tr>
 </table>
 <p>Виды провайдеров: <code>{ provide: X, useClass: Y }</code> — подменить реализацию (в тестах — фейк), <code>useValue</code> — готовое значение, <code>useFactory</code> — вычислить при создании, <code>useExisting</code> — алиас.</p>
 <div class="note-box"><span class="tag">ГДЕ МОЖНО ВЫЗЫВАТЬ inject()</span> Только в <b>контексте инъекции</b>: в инициализаторах полей класса, в конструкторе, в фабриках провайдеров и в функциональных guards/interceptors/resolvers. В методе, вызванном по клику, или в <code>setTimeout</code> — ошибка <code>NG0203</code>. Зависимости берутся полями класса, а не внутри методов.</div>
@@ -383,7 +387,7 @@ events$.pipe(takeUntilDestroyed()).subscribe(...);  // отписка при у�
 </div></details>
 
 <div class="next-box"><span class="tag">ПЕРЕД РАЗДЕЛОМ <a href="#sec-6">6</a></span><ul>
-<li>📖 <a href="https://angular.dev/guide/di" target="_blank">Dependency Injection</a> — 20 минут. <a href="https://angular.dev/ecosystem/rxjs-interop" target="_blank">RxJS interop</a> — 10 минут.</li>
+<li>📖 <a href="https://angular.dev/guide/routing" target="_blank">Routing</a> — 20 минут.</li>
 </ul></div>
 
 <h2 id="sec-6"><label class="done-label" title="Отметить раздел пройденным"><input type="checkbox" class="done" data-key="sec-6"></label>6. Роутер: маршруты, lazy, guards, параметры как input <a class="anchor" href="#sec-6">#</a></h2>
@@ -501,7 +505,7 @@ export const appConfig: ApplicationConfig = {
 <tr><td><code>PUT /api/rooms/:id</code></td><td>admin</td><td>изменить комнату</td></tr>
 <tr><td><code>GET /api/events?token=</code></td><td>токен</td><td>SSE: <code>booking.created</code>, <code>booking.cancelled</code></td></tr>
 </table>
-<p>Пользователи: <code>anna@corp.test</code> (admin), <code>boris@corp.test</code>, <code>vera@corp.test</code>, пароль у всех <code>password123</code>. Переменная <code>API_DELAY</code> добавляет задержку ко всем ответам, чтобы видеть состояния загрузки.</p>
+<p>Пользователи: <code>anna@corp.test</code> (admin), <code>boris@corp.test</code>, <code>vera@corp.test</code>, пароль у всех <code>password123</code>. Переменная <code>API_DELAY</code> добавляет задержку ко всем ответам, кроме потока <code>/api/events</code>, чтобы видеть состояния загрузки.</p>
 <pre><code>angular-lab/
 ├── docker-compose.yml         api (:3000) · web (ng serve :4200 с прокси /api) · prod (nginx :8080)
 ├── api/server.mjs             готовый API (шаг 1.1) — не редактируем
@@ -515,7 +519,7 @@ export const appConfig: ApplicationConfig = {
 │   │       │                  interceptors.ts, guards.ts, events.ts, tokens.ts, time.ts
 │   │       ├── shared/        app-shell.ts, toast.ts, duration-pipe.ts, not-found-page.ts
 │   │       ├── rooms/         room-card.ts, rooms-page.ts, room-page.ts, day-schedule.ts
-│   │       ├── booking/       booking-page.ts, booking-form.ts, time-select.ts
+│   │       ├── booking/       booking-page.ts, time-select.ts
 │   │       ├── bookings/      my-bookings-page.ts
 │   │       ├── auth/          login-page.ts
 │   │       └── admin/         admin.routes.ts, room-edit-page.ts (Reactive Forms)
@@ -523,12 +527,12 @@ export const appConfig: ApplicationConfig = {
 │   └── nginx.conf
 └── docs/angular-notes.md      ответы «проверь себя»</code></pre>
 <h3>Поток одного действия: Борис бронирует переговорную</h3>
-<pre><code>BookingForm: пользователь меняет «конец» на 12:00
+<pre><code>BookingPage: пользователь меняет «конец» на 12:00
   → model (signal) обновился → схема формы: validate(end &gt; start) ✓
   → validateHttp: GET /api/availability?... (debounce 300 мс; прошлый запрос отменён)
        ↳ authInterceptor добавил Bearer → apiLogInterceptor залогировал → ответ { free: true }
-  → bookingForm.end().pending() false, valid() true → кнопка активна
-Submit → submit(bookingForm, …) → BookingsStore.create() → POST /api/bookings
+  → f.end().pending() false, valid() true → кнопка активна
+Submit → submit(f, …) → BookingsStore.create() → POST /api/bookings
   → 201 → store.my.update(...) → «Мои брони» и счётчик в шапке перерисовались (сигналы)
   → сервер шлёт SSE booking.created всем → у Веры в расписании этой комнаты появился слот
   → 409 (кто-то успел раньше) → ошибка у полей времени, форма не сброшена</code></pre>
@@ -771,7 +775,7 @@ curl -s -X POST localhost:3000/api/auth/login -H 'Content-Type: application/json
   -d '{"email":"boris@corp.test","password":"password123"}'
 curl -s localhost:4200/api/rooms | head -c 80; echo
 cat web/src/main.ts web/src/app/app.config.ts</code></pre>
-<div class="why"><b>Зачем:</b> два контейнера. <code>api</code> — готовый бэкенд с задержкой 300 мс: так видно каждое состояние загрузки. <code>web</code> — dev-сервер Angular. Прокси в <code>proxy.conf.json</code> пересылает <code>/api</code> в соседний контейнер, поэтому код приложения ходит на относительный <code>/api/rooms</code>, без CORS и без адреса бэкенда в коде. В prod ту же роль сыграет nginx (6.4). <code>node_modules</code> — в отдельном томе, чтобы не смешивать бинарники Linux и хоста.</div>
+<div class="why"><b>Зачем:</b> два контейнера. <code>api</code> — готовый бэкенд с задержкой 300 мс: так видно каждое состояние загрузки. <code>web</code> — dev-сервер Angular. Прокси в <code>proxy.conf.json</code> пересылает <code>/api</code> в соседний контейнер, поэтому код приложения ходит на относительный <code>/api/rooms</code>, без CORS и без адреса бэкенда в коде. В prod ту же роль сыграет nginx (6.3). <code>node_modules</code> — в отдельном томе, чтобы не смешивать бинарники Linux и хоста.</div>
 <div class="fix-box"><span class="tag">ОЖИДАЕМЫЙ РЕЗУЛЬТАТ</span>
 <pre>{"token":"4f1c…","user":{"id":2,"email":"boris@corp.test","name":"Борис","role":"employee"}}
 {"message":"Требуется вход"}
@@ -1742,7 +1746,7 @@ export class BookingPage {
 // не забудьте JsonPipe: import { JsonPipe } from '@angular/common' → imports</code></pre>
 <div class="why"><b>Зачем:</b> в Signal Forms источник правды — сигнал с обычным объектом, а форма — «дерево полей» поверх него: <code>f.title</code> — поле, <code>f.title()</code> — его состояние (<code>value</code>, <code>errors</code>, <code>touched</code>, <code>invalid</code>), <code>f()</code> — состояние всей формы. <code>[formField]</code> связывает элемент с полем в обе стороны и сам проставляет <code>required</code>, <code>disabled</code> и нужный тип значения (у <code>type="number"</code> модель получает число, а не строку). Правила собраны в схеме — второй аргумент <code>form()</code>; <code>validate</code> — своё правило, и оно реактивно: читает <code>this.room()</code>, значит пересчитается при смене комнаты. Модель построена на <code>linkedSignal</code>, потому что input'ы (дата и время из ссылки расписания) появляются после создания класса, а <code>linkedSignal</code> пересобирает черновик, когда они меняются. <code>&lt;pre&gt;</code> с моделью — временная отладка, чтобы видеть, что форма и сигнал — одно и то же.</div>
 <div class="fix-box"><span class="tag">ОЖИДАЕМЫЙ РЕЗУЛЬТАТ</span><p>Из расписания «свободно — занять» на 14:00 открывается форма с датой и временем 14:00–15:00 из ссылки. Ввод темы меняет <code>model</code> в <code>&lt;pre&gt;</code> посимвольно. Уход с пустой темы — «Укажите тему встречи». «Участников: 9» в Эльбрусе — «В «Эльбрус» помещается 8», кнопка неактивна. В <code>&lt;pre&gt;</code> <code>attendees</code> — число без кавычек.</p></div>
-<div class="note-box"><span class="tag">ПРОВЕРЬ СЕБЯ</span><ul><li>Замените <code>linkedSignal</code> на <code>signal({... date: this.date() ?? todayIso() ...})</code>. Что произойдёт и почему? (Раздел 4 и шаг 3.2: когда input'ы получают значения.)</li><li>Вызовите <code>this.model.update(m =&gt; ({ ...m, title: 'Из кода' }))</code> по кнопке. Что покажет поле ввода?</li><li>Почему в <code>@for</code> по ошибкам <code>track e.kind</code>, а не <code>track $index</code>? Когда это важно?</li></ul></div>
+<div class="note-box"><span class="tag">ПРОВЕРЬ СЕБЯ</span><ul><li>Замените <code>linkedSignal</code> на <code>signal({... date: this.date() ?? todayIso() ...})</code>. Что произойдёт и почему? (Раздел 3 и шаг 3.2: когда input'ы получают значения.)</li><li>Вызовите <code>this.model.update(m =&gt; ({ ...m, title: 'Из кода' }))</code> по кнопке. Что покажет поле ввода?</li><li>Почему в <code>@for</code> по ошибкам <code>track e.kind</code>, а не <code>track $index</code>? Когда это важно?</li></ul></div>
 </div></div>
 
 <div class="step" id="step-4-2"><span class="step-head"><label class="done-label" title="Отметить шаг пройденным"><input type="checkbox" class="done" data-key="step-4-2"></label><span class="num">Шаг 4.2</span>Межполевые правила: конец позже начала, рабочие часы, не в прошлом — valueOf и ошибки у нужного поля<a class="anchor" href="#step-4-2">#</a></span><div class="step-body">

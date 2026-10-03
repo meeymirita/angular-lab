@@ -13,7 +13,7 @@
 
 ## Стек
 
-Angular 22 (standalone, zoneless, OnPush по умолчанию), Angular CLI + `@angular/build` (esbuild + Vite), сервисы-сторы на сигналах, `HttpClient` (fetch) + интерцепторы + `httpResource`, Signal Forms и Reactive Forms, RxJS 7 + rxjs-interop, Vitest через `ng test`. Бэкенд готовый: `api/server.mjs` — Node 22 без зависимостей, данные в памяти. Docker Compose, в проде — nginx.
+Angular 22 (standalone, zoneless, OnPush по умолчанию), Angular CLI + `@angular/build` (esbuild + Vite), сервисы-сторы на сигналах, `HttpClient` (fetch) + интерцепторы + `httpResource`, Signal Forms и Reactive Forms, RxJS 7 + rxjs-interop, Vitest через `ng test`. Бэкенд готовый: `api/server.mjs` — Node 24 без зависимостей, данные в памяти. Docker Compose, в проде — nginx.
 
 ## Формат
 

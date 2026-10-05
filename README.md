@@ -1,6 +1,6 @@
 # Angular Lab — RoomBook
 
-![Angular](https://meeymirita-files.storage.yandexcloud.net/angular/Angular.png)
+![Angular](https://raw.githubusercontent.com/meeymirita/works-lab/main/images/angular.png)
 
 > **26.09.2026 — методичка вычитана и исправлена.** Что найдено и что поправлено — в [fixes/frontend/angular.md](https://github.com/meeymirita/lab-fixes/blob/main/frontend/angular.md) репозитория `lab-fixes`.
 

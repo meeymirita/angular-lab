@@ -19,7 +19,7 @@ Angular 22 (standalone, zoneless, OnPush по умолчанию), Angular CLI +
 
 Методичка [`angular.html`](angular.html) ([открыть на сайте](https://anitech.meeymirita.ru/works/angular.html)) — открывается в браузере, прогресс по чекбоксам сохраняется локально. У каждого шага: код → «зачем» → команда → ожидаемый результат → «проверь себя»; ответы — в `docs/angular-notes.md`.
 
-## Что внутри (10 сессий, 39 шагов, ~31 ч)
+## Что внутри (10 сессий, 39 шагов, ~33,5 ч)
 
 - **Сессия 1** (~3 ч) — стенд и основы: готовый API и `ng new`, компоненты с `input`/`output` и `@for`, `signal`/`computed`/`model`/`linkedSignal`/`effect`; ломаем OnPush + zoneless мутацией массива (счётчик растёт, а сетка нет)
 - **Сессия 2** (~3,5 ч) — DI и HTTP: сервисы, уровни провайдеров и `InjectionToken` (провайдер не на том уровне), `HttpClient` + `toSignal`, `httpResource` с фильтрами на сервере, поиск без гонки ответов (`mergeMap` → `switchMap`), интерцепторы лога и ошибок
